@@ -12,6 +12,6 @@ Pattern: same as RosterPulse (GitHub repo + updater Worker + D1 + loader Worker)
 
 Releases: edit source/, bump source/version.json (and the app-version meta in source/build/app.src.html), run source/updater/build_app.py, copy dist/app.json and dist/build.txt into test/.
 Loader and updater Worker code (source/updater/loader.js, updater.js) are deployed through the Cloudflare connector, not through GitHub.
-/admin on royalstest needs the ADMIN_PASSWORD secret (not set yet; upload is refused until it is).
+/admin on royalstest: ADMIN_PASSWORD secret is set (Jeff has it; never stored in this repo).
 
 Current build: 2026-11-21.1 (test only)
