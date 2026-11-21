@@ -23,21 +23,21 @@ const run=async()=>{await updater.scheduled({},env,{waitUntil:p=>p});await new P
 fetchMode='404';chk('404 reports nothing_to_install',await run()==='nothing_to_install');
 fetchMode='mismatch';chk('mismatch caught',await run()==='build_name_mismatch');
 fetchMode='wrong';chk('wrong app caught',await run()==='wrong_app');
-fetchMode='ok';let r=await run();chk('installs: '+r,r==='installed 2026-11-21.1');
+fetchMode='ok';let r=await run();chk('installs: '+r,r==='installed '+bt.trim());
 r=await run();chk('second run up_to_date',r==='up_to_date');
 const get=(p,o)=>loader.fetch(new Request('https://x'+p,o),env);
-let x=await get('/');let t=await x.text();chk('/ serves html',x.status===200&&t.includes('app-version')&&t.includes('2026-11-21.1')&&t.includes('apple-touch-icon.png?v='));
-x=await get('/sw.js');t=await x.text();chk('sw cache name',t.includes('royals-stats-2026-11-21.1'));
+let x=await get('/');let t=await x.text();chk('/ serves html',x.status===200&&t.includes('app-version')&&t.includes(bt.trim())&&t.includes('apple-touch-icon.png?v='));
+x=await get('/sw.js');t=await x.text();chk('sw cache name',t.includes('royals-stats-'+bt.trim()));
 x=await get('/manifest.webmanifest');chk('manifest',(await x.json()).icons.length===3);
 for(const p of['/icon-192.png','/icon-512.png','/apple-touch-icon.png']){x=await get(p);const b=new Uint8Array(await x.arrayBuffer());chk(p+' png',b[1]===0x50&&b[2]===0x4e)}
 x=await get('/icon.svg');chk('svg',(await x.text()).startsWith('<svg'));
-x=await get('/api/health');const h=await x.json();chk('health',h.ok&&h.build==='2026-11-21.1'&&h.updater.r.startsWith('up_to_date'));
+x=await get('/api/health');const h=await x.json();chk('health',h.ok&&h.build===bt.trim()&&h.updater.r.startsWith('up_to_date'));
 x=await get('/nope');chk('404',x.status===404);
-const html=fs.readFileSync('../out/royals-stats-update.html','utf8').replace('2026-11-21.1','2026-11-21.2');
+const html=fs.readFileSync('../out/royals-stats-update.html','utf8').replace(bt.trim(),'9999-01-01.1');
 x=await get('/admin/upload',{method:'POST',body:html});chk('admin no pw 401',x.status===401);
 x=await loader.fetch(new Request('https://x/admin/upload',{method:'POST',body:html}),{DB:db});chk('admin no secret 403',x.status===403);
 x=await get('/admin/upload',{method:'POST',headers:{'x-admin-password':'pw'},body:'<html>'});chk('admin bad file 400',x.status===400);
 x=await get('/admin/upload',{method:'POST',headers:{'x-admin-password':'pw'},body:html});chk('admin ok',x.status===200);
-x=await get('/api/health');chk('admin build live',(await x.json()).build==='2026-11-21.2');
+x=await get('/api/health');chk('admin build live',(await x.json()).build==='9999-01-01.1');
 const fresh=(await import('./loader.mjs?fresh')).default;const empty=mkdb();x=await fresh.fetch(new Request('https://x/'),{DB:empty});chk('almost ready 503',x.status===503&&(await x.text()).includes('Almost ready'));
 console.log('FAILS:',F);

@@ -1,6 +1,6 @@
 // Royals Attack Stats: site Worker. Serves the app out of the D1 database (binding DB).
 // Updates arrive from GitHub through royals-updater. /admin is a manual fallback (needs the ADMIN_PASSWORD secret).
-const LOADER = 'l1';
+const LOADER = 'l2';
 const PART = 50000;
 let appCache = null, appChecked = 0;
 async function loadApp(db) {
@@ -44,11 +44,72 @@ async function install(db, bundle) {
   await db.prepare('DELETE FROM apppart WHERE ver != ?1').bind(ver).run();
   appCache = null; appChecked = 0;
 }
+
+// ---- game summary links: /api/live/:code (kept 30 days for a final game, 3 days otherwise) ----
+const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, PUT, DELETE, OPTIONS', 'access-control-allow-headers': 'Content-Type, X-Write-Key', 'access-control-max-age': '86400' };
+const LIVE_MAX = 900 * 1024;
+const DAY = 86400000;
+const hexOf = (b) => Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
+async function liveEnsure(db) {
+  await db.prepare('CREATE TABLE IF NOT EXISTS live (code TEXT PRIMARY KEY, rev INTEGER, key_hash TEXT, updated INTEGER, expires INTEGER, data TEXT)').run();
+  await db.prepare('CREATE TABLE IF NOT EXISTS livenew (ip TEXT NOT NULL, at INTEGER NOT NULL)').run();
+}
+async function liveApi(req, env, code) {
+  const db = env.DB;
+  const lj = (o, s) => new Response(JSON.stringify(o), { status: s || 200, headers: Object.assign({ 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }, CORS) });
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
+  if (!/^[A-HJKMNP-Z2-9]{6}$/.test(code)) return lj({ error: 'bad_code' }, 400);
+  await liveEnsure(db);
+  const now = Date.now();
+  if (req.method === 'GET') {
+    const row = await db.prepare('SELECT rev, updated, expires, data FROM live WHERE code = ?1').bind(code).first();
+    if (!row || row.expires < now) return lj({ error: 'not_found' }, 404);
+    const since = new URL(req.url).searchParams.get('rev');
+    if (since !== null && String(row.rev) === since) return lj({ unchanged: true, rev: row.rev });
+    return lj({ rev: row.rev, updated: row.updated, data: JSON.parse(row.data) });
+  }
+  if (req.method !== 'PUT' && req.method !== 'DELETE') return lj({ error: 'method_not_allowed' }, 405);
+  const key = req.headers.get('x-write-key') || '';
+  if (key.length < 16 || key.length > 200) return lj({ error: 'bad_key' }, 400);
+  const kh = hexOf(await sha(key));
+  const row = await db.prepare('SELECT rev, key_hash, expires FROM live WHERE code = ?1').bind(code).first();
+  const exists = !!row && row.expires >= now;
+  if (req.method === 'DELETE') {
+    if (!exists) return lj({ ok: true, gone: true });
+    if (row.key_hash !== kh) return lj({ error: 'wrong_key' }, 403);
+    await db.prepare('DELETE FROM live WHERE code = ?1').bind(code).run();
+    return lj({ ok: true });
+  }
+  if (+(req.headers.get('content-length') || 0) > LIVE_MAX) return lj({ error: 'too_big' }, 413);
+  const text = await req.text();
+  if (te.encode(text).length > LIVE_MAX) return lj({ error: 'too_big' }, 413);
+  let body; try { body = JSON.parse(text); } catch (e) { return lj({ error: 'bad_json' }, 400); }
+  const rev = body && body.rev, data = body && body.data;
+  if (!Number.isSafeInteger(rev) || rev < 0 || !data || typeof data !== 'object' || Array.isArray(data)) return lj({ error: 'bad_body' }, 400);
+  if (exists && row.key_hash !== kh) return lj({ error: 'code_taken' }, 403);
+  if (exists && rev <= row.rev) return lj({ ok: true, ignored: true, rev: row.rev });
+  if (!exists) {   // a new code: limit per network address (updates never count)
+    const ip = req.headers.get('cf-connecting-ip') || 'unknown';
+    const c = await db.prepare('SELECT COALESCE(SUM(CASE WHEN at > ?2 THEN 1 ELSE 0 END), 0) AS h, COUNT(*) AS d FROM livenew WHERE ip = ?1 AND at > ?3').bind(ip, now - 3600000, now - DAY).first();
+    if ((c ? c.h : 0) >= 40 || (c ? c.d : 0) >= 150) return lj({ error: 'rate_limited' }, 429);
+    await db.prepare('INSERT INTO livenew (ip, at) VALUES (?1, ?2)').bind(ip, now).run();
+  }
+  const expires = now + (data.status === 'final' ? 30 : 3) * DAY;
+  await db.prepare('INSERT OR REPLACE INTO live (code, rev, key_hash, updated, expires, data) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(code, rev, kh, now, expires, JSON.stringify(data)).run();
+  if (Math.random() < 0.05) {
+    await db.prepare('DELETE FROM live WHERE expires < ?1').bind(now).run();
+    await db.prepare('DELETE FROM livenew WHERE at < ?1').bind(now - DAY).run();
+  }
+  return lj({ ok: true, rev });
+}
 export default {
   async fetch(req, env) {
     const url = new URL(req.url), p = url.pathname;
     if (!env.DB) return new Response('Database not connected', { status: 500 });
-    if (p === '/admin') return new Response(ADMIN, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+    const lm = /^\/api\/live\/([^/]+)$/.exec(p);
+    if (lm) return liveApi(req, env, lm[1]);
+    const frame = url.searchParams.has('live') ? {} : { 'x-frame-options': 'DENY' };
+    if (p === '/admin') return new Response(ADMIN, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-frame-options': 'DENY' } });
     if (p === '/admin/upload' && req.method === 'POST') {
       const ok = await passOk(req, env);
       if (ok === 'nopass') return json({ error: 'Admin password is not set on this site' }, 403);
@@ -67,9 +128,9 @@ export default {
       const g = await env.DB.prepare("SELECT v FROM appmeta WHERE k = 'ghlast'").first().catch(() => null);
       return json({ ok: !!app, app: 'royals', build: app ? app.build : null, loader: LOADER, updater: g ? JSON.parse(g.v) : null });
     }
-    if (!app) return new Response(ALMOST, { status: 503, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+    if (!app) return new Response(ALMOST, { status: 503, headers: Object.assign({ 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }, frame) });
     const png = (b64) => new Response(fromB64(b64), { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=3600' } });
-    if (p === '/' || p === '/index.html') return new Response(app.html, { headers: Object.assign({ 'content-type': 'text/html; charset=utf-8' }, NOCACHE) });
+    if (p === '/' || p === '/index.html') return new Response(app.html, { headers: Object.assign({ 'content-type': 'text/html; charset=utf-8' }, NOCACHE, frame) });
     if (p === '/sw.js') return new Response(app.sw, { headers: Object.assign({ 'content-type': 'application/javascript; charset=utf-8' }, NOCACHE) });
     if (p === '/manifest.webmanifest') return new Response(app.manifest, { headers: Object.assign({ 'content-type': 'application/manifest+json' }, NOCACHE) });
     if (p === '/icon.svg') return new Response(app.icon_svg, { headers: { 'content-type': 'image/svg+xml', 'cache-control': 'public, max-age=3600' } });

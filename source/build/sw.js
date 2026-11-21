@@ -18,7 +18,7 @@ self.addEventListener('fetch', function (e) {
   var req = e.request;
   if (req.method !== 'GET') return;
   var url = new URL(req.url);
-  if (url.origin !== self.location.origin || url.pathname.indexOf('/admin') === 0 || url.pathname === '/sw.js') return;
+  if (url.origin !== self.location.origin || url.pathname.indexOf('/admin') === 0 || url.pathname.indexOf('/api/') === 0 || url.pathname === '/sw.js') return;
   e.respondWith(
     fetch(req).then(function (res) {
       if (res && res.ok) {
