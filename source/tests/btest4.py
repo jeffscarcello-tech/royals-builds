@@ -41,7 +41,7 @@ with sync_playwright() as p:
         pg.click('[data-act=fpic][data-id=cur]')
         ok=wait_for(pg,"(()=>{const c=document.getElementById('picCv');if(!c)return false;const d=c.getContext('2d').getImageData(500,5,1,1).data;return d[0]>240&&d[1]>180&&d[2]<90})()")
         chk(tag+'picture drawn (accent bar)',ok)
-        chk(tag+'picture is 1080x1350',pg.evaluate("[picCv.width,picCv.height].join()")=='1080,1350')
+        chk(tag+'picture is 1080 wide, at least 1350 tall',pg.evaluate("picCv.width===1080&&picCv.height>=1350"))
         if W==390:
             url=pg.evaluate("picCv.toDataURL('image/png')")
             open('t4_picture.png','wb').write(base64.b64decode(url.split(',')[1]))
@@ -57,7 +57,7 @@ with sync_playwright() as p:
         pg.click('[data-act=ptext]')
         wait_for(pg,"window.__shares.length>0")
         s=pg.evaluate("window.__shares.pop()")
-        chk(tag+'text summary',s and s['text'].startswith('FINAL: Royals 3, Calvin Christian 1') and 'Sets: 25-21, 22-25, 25-19, 25-17' in s['text'] and 'Kill %' in s['text'])
+        chk(tag+'text summary',s and s['text'].startswith('FINAL: Royals 3, Calvin Christian 1') and 'Sets: 25-21, 22-25, 25-19, 25-17' in s['text'] and 'Passing avg' in s['text'] and 'CALVIN CHRISTIAN' in s['text'] and 'Total errors' in s['text'])
         pg.click('#shpanel [data-act=shclose]')
         # recap
         pg.click('[data-act=frecap][data-id=cur]')
@@ -136,7 +136,7 @@ with sync_playwright() as p:
         chk(tag+'games card shows sets',pg.locator('.card .tbl td.w').count()>0)
         chk(tag+'no overflow games',pg.evaluate('document.documentElement.scrollWidth<=innerWidth'))
         if W==390: pg.screenshot(path='t4_games.png')
-        chk(tag+'version shown matches build',pg.evaluate("VERSION")=='2026-11-21.2')
+        chk(tag+'version shown matches build',pg.evaluate("VERSION")=='2026-11-21.3')
         chk(tag+'no page errors',not errs and not rerr)
         if errs or rerr: print(errs,rerr)
         rc.close();ctx.close()

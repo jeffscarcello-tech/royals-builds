@@ -1,6 +1,6 @@
 <title>Royals Attack Stats</title>
 <meta name="app-id" content="royals-attack-stats">
-<meta name="app-version" content="2026-11-21.2">
+<meta name="app-version" content="2026-11-21.3">
 <meta name="claude:viewport-fit-sides" content="cover">
 <!--GF--><link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -256,7 +256,7 @@ body.fix .btn.hit::after{content:"\2212 1";position:absolute;top:6px;right:8px;b
 .sets .tag{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px;padding:2px 8px}.sets td{font-family:var(--display);font-size:21px}
 .tbl td.w{font-weight:800;color:var(--ink)}
 .tbl td.l{color:var(--muted)}
-#picCv{width:100%;max-width:330px;height:auto;aspect-ratio:4/5;border-radius:12px;align-self:center;background:#0f1229}
+#picCv{width:100%;max-width:360px;height:auto;border-radius:12px;align-self:center;background:#0f1229}
 #rcBox{width:100%;min-height:150px;border:2px solid var(--line);border-radius:14px;padding:12px;font:600 16px/1.45 var(--body);background:var(--soft);color:var(--ink)}
 .qrbox{align-self:center;background:#fff;padding:10px;border-radius:14px;line-height:0}
 .qrbox svg{width:220px;height:220px}
@@ -824,18 +824,11 @@ async function shareTextOut(text){
   copyOut(text,'Text copied');
 }
 function shortText(g){
-  const w=setsWon(g),o=g.opp||'Opponent',L=[finalLine(g)+' ('+shortDate(g.date)+')'];
+  const w=setsWon(g),L=[finalLine(g)+' ('+shortDate(g.date)+')'];
   if(w.n)L.push('Sets: '+w.d.map(x=>x[0]+'-'+x[1]).join(', '));
-  const ra=sumAtk(g.atk),re=errTotals(g.atk,g.players,g.missed),rp=passAvg(passTotals(g.players));
-  if(g.o){
-    const oa=sumAtk(g.o.atk),oe=errTotals(g.o.atk,g.o.players,g.missedO||0),op=passAvg(passTotals(g.o.players));
-    L.push('Kills: Royals '+ra.k+', '+o+' '+oa.k,'Kill %: Royals '+pct(ra.kp)+', '+o+' '+pct(oa.kp),'Kill Eff %: Royals '+pct(ra.eff)+', '+o+' '+pct(oa.eff),
-      'Pass avg: Royals '+f1(rp)+', '+o+' '+f1(op),'Total errors: Royals '+re.t+', '+o+' '+oe.t);
-  }else L.push('Royals kills: '+ra.k,'Royals kill %: '+pct(ra.kp),'Royals kill eff %: '+pct(ra.eff),'Royals pass avg: '+f1(rp),'Royals total errors: '+re.t);
-  L.push('Tracked with Royals Attack Stats');
-  return L.join('\n');
+  const body=gameText(g).split('\n').slice(1);
+  return L.concat(body,['','Tracked with Royals Attack Stats']).join('\n');
 }
-
 /* ---- summary picture ---- */
 const PIC_FONT="'Barlow Condensed','Arial Narrow',Arial,sans-serif",PIC_BODY="'Barlow',system-ui,Arial,sans-serif";
 const PIC_R='#2b2b80',PIC_O='#bd520d';
@@ -860,9 +853,15 @@ function logoImg(){
 async function drawPic(cv,g){
   await picFonts();
   const logo=await logoImg();
-  const c=cv.getContext('2d'),W=1080,H=1350,X=60,CW=W-120;
+  const off=document.createElement('canvas');off.width=1080;off.height=7000;
+  const H=drawPicOn(off.getContext('2d'),g,logo);
+  cv.width=1080;cv.height=H;
+  cv.getContext('2d').drawImage(off,0,0);
+}
+function drawPicOn(c,g,logo){
+  const W=1080,X=60,CW=W-120,w=setsWon(g);
   c.textBaseline='alphabetic';
-  c.fillStyle='#0f1229';c.fillRect(0,0,W,H);
+  c.fillStyle='#0f1229';c.fillRect(0,0,W,7000);
   c.fillStyle='#ffc83d';c.fillRect(0,0,W,14);
   // header
   if(logo){const lh=112,lw=Math.round(logo.width*lh/logo.height);c.drawImage(logo,X,46,lw,lh);
@@ -872,66 +871,100 @@ async function drawPic(cv,g){
   const dm=/^(\d{4})-(\d{2})-(\d{2})$/.exec(g.date||'');
   c.fillText(dm?new Date(+dm[1],+dm[2]-1,+dm[3]).toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'}).toUpperCase():(g.date||''),W-X,112);
   // result line
-  const w=setsWon(g);
   c.textAlign='left';c.fillStyle='#ffffff';c.font='800 76px '+PIC_FONT;c.fillText('FINAL',X,256);
-  let fx=X+c.measureText('FINAL').width+24;
-  if(w.n&&Math.min(w.r,w.o)>0&&Math.abs(w.r-w.o)===1){c.fillStyle='#ffc83d';c.font='800 44px '+PIC_FONT;c.fillText('IN '+w.n+' SETS',fx,258)}
-  else if(!w.n){c.fillStyle='#9aa1d6';c.font='700 34px '+PIC_FONT;c.fillText('KILL % SHOWN, NO SET SCORES ENTERED',fx,256)}
+  const fx=X+c.measureText('FINAL').width+24;
+  if(w.n&&Math.min(w.r,w.o)>0&&Math.abs(w.r-w.o)===1){c.fillStyle='#ffc83d';c.font='800 44px '+PIC_FONT;c.fillText('IN '+w.n+' SETS',fx,252)}
+  else if(!w.n){c.fillStyle='#9aa1d6';c.font='700 34px '+PIC_FONT;c.fillText('NO SET SCORES ENTERED',fx,250)}
   // team panels
   const ra=sumAtk(g.atk),oa=g.o?sumAtk(g.o.atk):null;
-  const teams=[{name:'Royals',col:PIC_R,sub:'Kill Eff '+pct(ra.eff)+' · '+ra.k+' kills',big:w.n?String(w.r):pct(ra.kp)},
-    {name:g.opp||'Opponent',col:PIC_O,sub:oa?'Kill Eff '+pct(oa.eff)+' · '+oa.k+' kills':'Stats not saved',big:w.n?String(w.o):(oa?pct(oa.kp):'–')}];
+  const panels=[{name:'Royals',col:PIC_R,sub:'Kill % '+pct(ra.kp)+' · '+ra.k+' kills',big:w.n?String(w.r):'–'},
+    {name:g.opp||'Opponent',col:PIC_O,sub:oa?'Kill % '+pct(oa.kp)+' · '+oa.k+' kills':'Stats not saved',big:w.n?String(w.o):'–'}];
   let y=286;
-  teams.forEach(t=>{
+  panels.forEach(t=>{
     const ink=inkOn(t.col);
     c.fillStyle=t.col;rrect(c,X,y,CW,170,30);c.fill();
-    c.fillStyle=ink;c.textAlign='right';
-    const bigSize=w.n?140:88;c.font='800 '+bigSize+'px '+PIC_FONT;c.fillText(t.big,X+CW-36,y+(w.n?137:120));
+    c.fillStyle=ink;c.textAlign='right';c.font='800 140px '+PIC_FONT;c.fillText(t.big,X+CW-36,y+137);
     const bigW=c.measureText(t.big).width;
     c.textAlign='left';
-    const nm=fitText(c,t.name.toUpperCase(),CW-bigW-110,72,40,'800',PIC_FONT);c.fillText(nm,X+36,y+86);
+    c.fillText(fitText(c,t.name.toUpperCase(),CW-bigW-110,72,40,'800',PIC_FONT),X+36,y+86);
     c.globalAlpha=.85;c.font='600 32px '+PIC_BODY;c.fillText(fitText(c,t.sub,CW-bigW-110,32,24,'600',PIC_BODY),X+36,y+134);c.globalAlpha=1;
-    if(!w.n){c.textAlign='right';c.globalAlpha=.8;c.font='700 26px '+PIC_FONT;c.fillText('KILL %',X+CW-36,y+38);c.globalAlpha=1}
     y+=188;
   });
   // by-set table
-  y+=20;
-  const rowH=58;
   if(w.n){
-    const nameW=330,colW=Math.min(110,(CW-nameW-130)/w.n);
+    y+=20;const rowH=58,nameW=330,colW=Math.min(110,(CW-nameW-130)/w.n);
     c.fillStyle='#1b1f45';rrect(c,X,y,CW,rowH*3+20,24);c.fill();
     c.fillStyle='#9aa1d6';c.font='700 28px '+PIC_FONT;c.textAlign='left';c.fillText('SET',X+28,y+50);
-    c.textAlign='center';
-    w.d.forEach((x,i)=>c.fillText(String(i+1),X+nameW+colW*i+colW/2,y+50));
-    c.fillText('SETS',X+CW-70,y+50);
-    [[ 'Royals',PIC_R,0],[g.opp||'Opponent',PIC_O,1]].forEach((t,ri)=>{
+    c.textAlign='center';w.d.forEach((x,i)=>c.fillText(String(i+1),X+nameW+colW*i+colW/2,y+50));c.fillText('SETS',X+CW-70,y+50);
+    [['Royals','#8f8cff',0],[g.opp||'Opponent','#f39a5c',1]].forEach((t,ri)=>{
       const ty=y+50+rowH*(ri+1);
-      c.fillStyle=t[1]===PIC_R?'#6f6cf0':'#f07a2e';c.beginPath();c.arc(X+40,ty-12,13,0,Math.PI*2);c.fill();
+      c.fillStyle=t[1];c.beginPath();c.arc(X+40,ty-12,13,0,Math.PI*2);c.fill();
       c.fillStyle='#ffffff';c.textAlign='left';c.fillText(fitText(c,t[0].toUpperCase(),nameW-80,38,26,'800',PIC_FONT),X+66,ty);
       c.textAlign='center';
       w.d.forEach((x,i)=>{const me=x[t[2]],them=x[1-t[2]];c.fillStyle=me>them?'#ffffff':'#7c83b8';c.font=(me>them?'800 ':'600 ')+'40px '+PIC_FONT;c.fillText(String(me),X+nameW+colW*i+colW/2,ty)});
       c.fillStyle='#ffc83d';c.font='800 44px '+PIC_FONT;c.fillText(String(t[2]?w.o:w.r),X+CW-70,ty);
     });
-    y+=rowH*3+44;
+    y+=rowH*3+20;
   }
-  // key stats (volleyball has no scoring-play list, so the stats go here)
-  const oe=g.o?errTotals(g.o.atk,g.o.players,g.missedO||0):null,re=errTotals(g.atk,g.players,g.missed);
-  const rp=passAvg(passTotals(g.players)),op=g.o?passAvg(passTotals(g.o.players)):null;
-  const stats=[['Kill %',pct(ra.kp),oa?pct(oa.kp):'–'],['Kill Eff %',pct(ra.eff),oa?pct(oa.eff):'–'],['Kills',ra.k,oa?oa.k:'–'],
-    ['Pass avg',f1(rp),g.o?f1(op):'–'],['Total errors',re.t,oe?oe.t:'–'],['Missed serves',g.missed||0,g.o?(g.missedO||0):'–']];
-  if(w.n)stats.splice(2,1);
-  const left=H-86-y,sh=Math.min(70,Math.floor(left/(stats.length+1))),fs=Math.round(Math.min(42,sh*.66));
-  c.fillStyle='#9aa1d6';c.font='700 28px '+PIC_FONT;c.textAlign='left';c.fillText('KEY STATS',X+28,y+sh*.7);
-  c.textAlign='center';c.fillStyle='#8f8cff';c.fillText('ROYALS',X+CW-330,y+sh*.7);
-  c.fillStyle='#f39a5c';c.fillText(fitText(c,(g.opp||'Opponent').toUpperCase(),230,28,20,'700',PIC_FONT),X+CW-110,y+sh*.7);
-  stats.forEach((r,i)=>{
-    const ty=y+sh*(i+1)+sh*.7;
-    c.fillStyle='rgba(255,255,255,.08)';c.fillRect(X,y+sh*(i+1),CW,2);
-    c.fillStyle='#e7e9ff';c.textAlign='left';c.font='700 '+Math.round(fs*.86)+'px '+PIC_FONT;c.fillText(r[0].toUpperCase(),X+28,ty);
-    c.textAlign='center';c.fillStyle='#ffffff';c.font='800 '+fs+'px '+PIC_FONT;c.fillText(String(r[1]),X+CW-330,ty);c.fillText(String(r[2]),X+CW-110,ty);
+  // head-to-head
+  const re=errTotals(g.atk,g.players,g.missed),oe=g.o?errTotals(g.o.atk,g.o.players,g.missedO||0):null;
+  const rpt=passTotals(g.players),opt=g.o?passTotals(g.o.players):null;
+  const cmp=[['Kills',ra.k,oa?oa.k:'–'],['Kill %',pct(ra.kp),oa?pct(oa.kp):'–'],['Kill Eff %',pct(ra.eff),oa?pct(oa.eff):'–'],
+    ['Pass avg',f1(passAvg(rpt)),opt?f1(passAvg(opt)):'–'],['Aced (pass 0)',rpt[3],opt?opt[3]:'–'],['Missed serves',g.missed||0,g.o?(g.missedO||0):'–'],['Total errors',re.t,oe?oe.t:'–']];
+  y+=44;const sh=56,c1=X+CW-330,c2=X+CW-110;
+  c.fillStyle='#9aa1d6';c.font='700 28px '+PIC_FONT;c.textAlign='left';c.fillText('HEAD TO HEAD',X+28,y);
+  c.textAlign='center';c.fillStyle='#8f8cff';c.fillText('ROYALS',c1,y);
+  c.fillStyle='#f39a5c';c.fillText(fitText(c,(g.opp||'Opponent').toUpperCase(),230,28,20,'700',PIC_FONT),c2,y);
+  cmp.forEach((r,i)=>{
+    const top=y+16+sh*i,ty=top+sh*.7;
+    c.fillStyle='rgba(255,255,255,.08)';c.fillRect(X,top,CW,2);
+    c.fillStyle='#e7e9ff';c.textAlign='left';c.font='700 34px '+PIC_FONT;c.fillText(r[0].toUpperCase(),X+28,ty);
+    c.textAlign='center';c.fillStyle='#ffffff';c.font='800 40px '+PIC_FONT;c.fillText(String(r[1]),c1,ty);c.fillText(String(r[2]),c2,ty);
+  });
+  y+=16+sh*cmp.length+10;
+  // full stats for each team
+  const RH=50;
+  const teams=[{name:'Royals',col:PIC_R,atk:g.atk,players:g.players,missed:g.missed||0}];
+  teams.push(g.o?{name:g.opp||'Opponent',col:PIC_O,atk:g.o.atk,players:g.o.players,missed:g.missedO||0}:{name:g.opp||'Opponent',col:PIC_O,atk:null});
+  const hdr=(labels,xs,yy)=>{c.fillStyle='#9aa1d6';c.font='700 26px '+PIC_FONT;labels.forEach((l,i)=>{c.textAlign=i?'center':'left';c.fillText(l,i?xs[i]:X+24,yy)})};
+  const rowOut=(vals,xs,yy,bold,band)=>{
+    if(band){c.fillStyle='rgba(255,255,255,.07)';c.fillRect(X,yy-RH*.68,CW,RH)}
+    vals.forEach((v,i)=>{c.textAlign=i?'center':'left';c.fillStyle=i?'#ffffff':'#e7e9ff';c.font=(bold||!i?'800 ':'600 ')+(i?34:32)+'px '+PIC_FONT;
+      c.fillText(i?String(v):fitText(c,String(v),xs[1]-X-60,32,22,'800',PIC_FONT),i?xs[i]:X+24,yy)});
+  };
+  teams.forEach(t=>{
+    y+=34;
+    const ink=inkOn(t.col);
+    c.fillStyle=t.col;rrect(c,X,y,CW,70,20);c.fill();
+    c.fillStyle=ink;c.textAlign='left';c.fillText(fitText(c,t.name.toUpperCase(),CW-380,46,30,'800',PIC_FONT),X+26,y+50);
+    if(!t.atk){
+      y+=70+50;c.fillStyle='#9aa1d6';c.textAlign='left';c.font='600 30px '+PIC_BODY;c.fillText('Opponent stats were not saved for this game.',X+24,y);y+=10;return;
+    }
+    const e=errTotals(t.atk,t.players,t.missed);
+    c.fillStyle=ink;c.textAlign='right';c.font='800 34px '+PIC_FONT;c.fillText('TOTAL ERRORS '+e.t,X+CW-26,y+48);
+    y+=70+50;
+    // attack by pass rating
+    const ax=[0,X+300,X+410,X+520,X+630,X+780,X+930];
+    hdr(['ATTACK','KILL','ERR','PC','TOT','KILL %','EFF %'],ax,y);
+    [3,2,1].forEach(p=>{y+=RH;const r=t.atk[p],s=rowStats(r);rowOut(['Pass '+p,r.k,r.e,r.pc,s.n,pct(s.kp),pct(s.eff)],ax,y)});
+    const a=sumAtk(t.atk);y+=RH;rowOut(['All',a.k,a.e,a.pc,a.n,pct(a.kp),pct(a.eff)],ax,y,true,true);
+    // passing by player
+    y+=RH+24;
+    const px=[0,X+480,X+590,X+700,X+810,X+930];
+    hdr(['PASSING','3','2','1','0','AVG'],px,y);
+    if(!t.players.length){y+=RH;c.fillStyle='#9aa1d6';c.textAlign='left';c.font='600 30px '+PIC_BODY;c.fillText('No passing entered',X+24,y)}
+    t.players.forEach(pl=>{y+=RH;rowOut([pl.name||'?',pl.c[0],pl.c[1],pl.c[2],pl.c[3],f1(passAvg(pl.c))],px,y)});
+    if(t.players.length){const tt=passTotals(t.players);y+=RH;rowOut(['Total',tt[0],tt[1],tt[2],tt[3],f1(passAvg(tt))],px,y,true,true)}
+    // serving and errors
+    y+=RH+8;
+    c.fillStyle='#c8cdf0';c.textAlign='left';
+    c.fillText(fitText(c,'Missed serves '+t.missed+'  ·  Hitting errors '+e.h+'  ·  Service errors '+e.s+'  ·  Aced '+e.a,CW-48,30,22,'600',PIC_BODY),X+24,y);
   });
   // footer
+  y+=70;
+  const H=Math.max(1350,y+60);
   c.fillStyle='#7c83b8';c.textAlign='center';c.font='600 28px '+PIC_BODY;c.fillText('Tracked with Royals Attack Stats',W/2,H-40);
+  return H;
 }
 async function openPic(g){
   openSheet('<h3 class="h3" id="shTitle">Share game summary</h3><canvas id="picCv" width="1080" height="1350" role="img" aria-label="Game summary picture"></canvas>'+

@@ -14,7 +14,8 @@ Releases: edit source/, bump source/version.json (and the app-version meta in so
 Loader and updater Worker code (source/updater/loader.js, updater.js) are deployed through the Cloudflare connector, not through GitHub.
 /admin on royalstest: ADMIN_PASSWORD secret is set (Jeff has it; never stored in this repo).
 
-Current build: 2026-11-21.2 (test only)
+Current build: 2026-11-21.3 (test only)
+- 2026-11-21.3: summary picture shows every stat for both teams (attack by pass, passing by player, serves, errors); picture height grows to fit. Share as text sends full stats.
 - 2026-11-21.2: set scores; Share game summary (1080x1350 picture), Game recap post, Export to a spreadsheet (CSV), Get a summary link & QR.
   Summary links: /?live=CODE, data in the site D1 table `live` (30 days), new codes limited per network (table `livenew`).
   Old long #g= links still open. Loader l2 deployed to royalstest (adds /api/live).
