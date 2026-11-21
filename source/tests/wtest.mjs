@@ -1,0 +1,31 @@
+import w from './worker.mjs';
+import fs from 'fs';
+const kv=new Map();
+const KV={get:async k=>kv.has(k)?kv.get(k):null,put:async(k,v)=>{kv.set(k,v)},delete:async k=>{kv.delete(k)}};
+const env={APP_KV:KV,ADMIN_PASSWORD:'hunter2'};
+const call=async(path,opt={},e=env)=>{const r=await w.fetch(new Request('https://x.workers.dev'+path,opt),e);return r};
+const ok=(c,m)=>{console.log((c?'PASS ':'FAIL ')+m);if(!c)process.exitCode=1};
+let r=await call('/');ok(r.status===200&&(await r.text()).includes('app-id'),'serves built-in app');
+r=await call('/admin/status');let s=await r.json();ok(s.source==='built-in'&&s.kvBound&&s.passwordSet,'status built-in');
+const upd=fs.readFileSync('royals-stats-update.html','utf8').replace('2026-11-21.1','2026-11-09.2');
+r=await call('/admin/upload',{method:'POST',body:upd});ok(r.status===401,'upload without password rejected');
+r=await call('/admin/upload',{method:'POST',headers:{'x-admin-password':'nope'},body:upd});ok(r.status===401,'wrong password rejected');
+r=await call('/admin/upload',{method:'POST',headers:{'x-admin-password':'hunter2'},body:'<html>hi</html>'});ok(r.status===400,'non-app file rejected');
+r=await call('/admin/upload',{method:'POST',headers:{'x-admin-password':'hunter2'},body:'<!doctype html><html><body>x</body></html>'});ok(r.status===400,'html without app id rejected');
+r=await call('/admin/upload',{method:'POST',headers:{'x-admin-password':'hunter2'},body:upd});ok(r.status===200,'valid upload accepted');
+r=await call('/');ok((await r.text()).includes('2026-11-09.2'),'app now served from KV');
+s=await (await call('/admin/status')).json();ok(s.source==='uploaded'&&s.version==='2026-11-09.2'&&!s.hasPrevious,'status uploaded');
+const upd2=upd.replace('2026-11-09.2','2026-11-10.3');
+r=await call('/admin/upload',{method:'POST',headers:{'x-admin-password':'hunter2'},body:upd2});ok(r.status===200,'second upload');
+s=await (await call('/admin/status')).json();ok(s.version==='2026-11-10.3'&&s.hasPrevious&&s.prevVersion==='2026-11-09.2','previous kept');
+r=await call('/admin/rollback',{method:'POST',headers:{'x-admin-password':'hunter2'}});ok(r.status===200,'rollback ok');
+r=await call('/');ok((await r.text()).includes('2026-11-09.2'),'rolled back version served');
+r=await call('/admin/builtin',{method:'POST',headers:{'x-admin-password':'hunter2'}});ok(r.status===200,'builtin ok');
+r=await call('/');ok((await r.text()).includes('2026-11-21.1'),'built-in served again');
+r=await call('/admin/rollback',{method:'POST',headers:{'x-admin-password':'hunter2'}});ok(r.status===200,'can restore uploaded after built-in');
+// no KV / no password
+r=await call('/',{},{});ok(r.status===200,'works without KV');
+r=await call('/admin/upload',{method:'POST',body:upd},{});ok(r.status===403,'no password var -> refused');
+r=await call('/admin/upload',{method:'POST',headers:{'x-admin-password':'x'},body:upd},{ADMIN_PASSWORD:'x'});ok(r.status===500,'no KV -> clear error');
+for(const p of ['/admin','/manifest.webmanifest','/sw.js','/icon-192.png','/icon-512.png','/apple-touch-icon.png']){r=await call(p);ok(r.status===200,'GET '+p+' '+r.headers.get('content-type'))}
+r=await call('/nope');ok(r.status===404,'404');
