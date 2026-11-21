@@ -1,6 +1,6 @@
 <title>Royals Attack Stats</title>
 <meta name="app-id" content="royals-attack-stats">
-<meta name="app-version" content="2026-11-21.3">
+<meta name="app-version" content="2026-11-21.4">
 <meta name="claude:viewport-fit-sides" content="cover">
 <!--GF--><link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -277,36 +277,79 @@ body.viewer .meta,body.viewer .nav2,body.viewer .stick{display:none}
   padding-top:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 #shBox{width:100%;min-height:84px;border:2px solid var(--line);border-radius:14px;padding:10px;font:600 13px/1.4 var(--body);background:var(--soft);color:var(--ink)}
 
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);border-radius:999px;padding:10px 18px;font-weight:700;z-index:40;max-width:calc(100% - 32px);text-align:center;opacity:0;pointer-events:none;transition:opacity .15s}
+/* layout v2: home list, game header, bottom tabs */
+body{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}
+.ver{flex:none;align-self:flex-start;font-size:12px;font-weight:800;color:var(--muted);border:2px solid var(--line);border-radius:999px;padding:3px 9px;white-space:nowrap}
+.ghd{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 0 4px;max-width:640px;margin-inline:auto}
+.ghd[hidden],.hd[hidden],.bnav[hidden]{display:none}
+.back{border:2px solid var(--line);background:var(--card);border-radius:14px;min-height:56px;padding:0 12px;font-weight:800;font-size:17px;white-space:nowrap}
+.gtitle{text-align:left;border:0;background:transparent;min-width:0;padding:2px;display:flex;flex-direction:column;gap:1px}
+.gtitle b{font-family:var(--display);font-weight:800;font-size:21px;line-height:1.05;text-transform:uppercase;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-width:100%;overflow-wrap:anywhere}
+.gtitle small{color:var(--muted);font-weight:700;font-size:14px;line-height:1.2;max-width:100%}
+.ghd .undo{padding:0 18px}
+.ghd .lastline{grid-column:1/-1;padding-top:2px}
+.bnav{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--card);border-top:2px solid var(--line);padding-top:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+.bin{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.bnav .tab{min-height:58px;font-size:18px;letter-spacing:0;padding:0 2px}
+.tab.on[data-tab="t"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.act.big{min-height:72px;font-size:22px;font-family:var(--display);font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+.glist{display:flex;flex-direction:column;gap:8px}
+.grow2{display:flex;gap:8px;align-items:stretch}
+.gr{flex:1;min-width:0;display:grid;grid-template-columns:50px minmax(0,1fr);gap:10px;align-items:center;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:10px 12px;min-height:74px}
+.gr.cur{border:3px solid var(--games)}
+.gd{display:flex;flex-direction:column;align-items:center;font-family:var(--display);font-weight:800;line-height:1}
+.gd b{font-size:15px;text-transform:uppercase;color:var(--muted)}
+.gd strong{font-size:28px}
+.gm2{min-width:0}
+.gm2 b{display:block;font-weight:800;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gm2 small{display:flex;align-items:center;gap:8px;color:var(--muted);font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;margin-top:4px}
+.gm2 small .chip{font-size:14px;padding:2px 9px}
+.chip{font-family:var(--display);font-weight:800;font-size:17px;border-radius:999px;padding:4px 10px;white-space:nowrap;text-transform:uppercase;letter-spacing:.02em}
+.chip.w{background:var(--kill);color:var(--btn-text)}
+.chip.l{background:var(--err);color:var(--btn-text)}
+.chip.p{background:var(--amber);color:var(--btn-text)}
+.chip.f{background:var(--soft);color:var(--ink);border:2px solid var(--line)}
+.more{flex:none;width:52px;border:2px solid var(--line);background:var(--card);border-radius:16px;font-size:24px;font-weight:800;color:var(--muted)}
+.opt{flex-direction:column;align-items:flex-start;text-align:left;gap:2px}
+.opt b{font-size:18px}
+.opt small{font-weight:600;color:var(--muted);font-size:14px}
+.act.go.opt small,.act.open.opt small{color:inherit;opacity:.85}
+.res{align-items:center;text-align:center}
+.resline{font-family:var(--display);font-weight:800;font-size:30px;line-height:1.05;text-transform:uppercase}
+.seg,.seg3{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg3{grid-template-columns:1fr 1fr 1fr}
+.segb{min-height:52px;border:2px solid var(--line);background:var(--card);border-radius:14px;font-weight:800;font-size:16px}
+.segb.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.rec{display:grid;grid-template-columns:1fr 1fr;text-align:center}
+.rec span{display:block;font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.rec b{font-family:var(--display);font-weight:800;font-size:40px}
+.rosrow{display:grid;grid-template-columns:minmax(0,1fr) 48px;gap:8px}
+.rosin{width:100%;min-width:0;height:52px;border:2px solid var(--line);border-radius:12px;padding:0 12px;font-weight:700;font-size:18px;background:var(--soft);color:var(--ink)}
+.fld{display:flex;flex-direction:column;gap:6px;font-weight:700;color:var(--muted)}
+.btn.hit{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.toast.act{pointer-events:auto;display:flex;align-items:center;gap:12px}
+.tbtn{background:var(--amber);color:var(--btn-text);border:0;border-radius:999px;padding:6px 14px;font-weight:800}
+body.viewer #gameHd,body.viewer #bnav,body.viewer .ver{display:none}
+body.viewer{padding-bottom:40px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(104px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);border-radius:999px;padding:10px 18px;font-weight:700;z-index:40;max-width:calc(100% - 32px);text-align:center;opacity:0;pointer-events:none;transition:opacity .15s}
 .toast.show{opacity:1}
 </style>
 
-<header class="hd">
+<header class="hd" id="appHd">
   <div class="brand">
     <img class="logo" src="%%LOGO%%" alt="Selkirk Royals crest" width="%%LW%%" height="%%LH%%">
-    <div class="bt"><span class="ov">Selkirk Royals</span><h1>Attack Stats</h1></div>
-    <button class="theme" id="themeBtn" data-act="theme" aria-label="Colour theme">Auto</button>
+    <div class="bt"><span class="ov">Selkirk Royals</span><h1>Games</h1></div>
+    <span class="ver" id="verTag"></span>
   </div>
-  <div class="meta">
-    <label class="vs"><span>Royals vs</span><input id="oppName" placeholder="Opponent" autocomplete="off" aria-label="Opponent name"></label>
-    <input type="date" id="gameDate" aria-label="Game date">
-  </div>
-  <nav class="nav2" aria-label="More views">
-    <button class="tab" data-act="tab" data-tab="g">Games</button>
-    <button class="tab" data-act="tab" data-tab="s">Sheet</button>
-    <button class="tab" data-act="tab" data-tab="z">Season</button>
-  </nav>
 </header>
-<div class="stick">
-  <div class="stickrow">
-    <button class="tab" data-act="tab" data-tab="r">Royals</button>
-    <button class="tab" data-act="tab" data-tab="o" id="oppTab">Opponent</button>
-    <button class="undo" data-act="undo" aria-label="Undo last tap">Undo</button>
-    <button class="fixbtn" id="fixBtn" data-act="fix" aria-pressed="false">Fix<br>&minus;1</button>
-  </div>
-  <div class="lastline" id="lastLine" aria-live="polite">Nothing yet</div>
-</div>
+<header class="ghd" id="gameHd" hidden>
+  <button class="back" data-act="home" aria-label="Back to all games">&lsaquo; Games</button>
+  <button class="gtitle" data-act="editgame" aria-label="Change opponent or date"><b id="gTitle">vs Opponent</b><small id="gSub"></small></button>
+  <button class="undo" data-act="undo" id="undoBtn" aria-label="Undo last tap">Undo</button>
+  <div class="lastline" id="lastLine" aria-live="polite"></div>
+</header>
 <main id="app"></main>
+<nav class="bnav" id="bnav" aria-label="Screens"></nav>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="shwrap" id="shwrap" hidden>
   <div class="shback" data-act="shclose"></div>
@@ -354,7 +397,7 @@ const today=()=>new Date().toLocaleDateString('en-CA');
 const emptyAtk=()=>({3:{k:0,e:0,pc:0},2:{k:0,e:0,pc:0},1:{k:0,e:0,pc:0}});
 const mkTeam=names=>({atk:emptyAtk(),players:names.map(n=>({id:uid(),name:n,c:[0,0,0,0]}))});
 const SAMPLE_ID='sample-nov2-2026';
-function fresh(){return{opp:'',date:today(),t:{r:mkTeam(['Aedyn','Sam','AMC']),o:mkTeam([])},missed:0,missedO:0,tab:'r',fix:false,hist:[],gid:uid(),games:[],sets:[],links:{},liveDel:[]}}
+function fresh(){return{opp:'',date:today(),t:{r:mkTeam(['Aedyn','Sam','AMC']),o:mkTeam([])},missed:0,missedO:0,tab:'r',fix:false,hist:[],gid:uid(),games:[],sets:[],links:{},liveDel:[],view:'home',final:false,started:false,roster:null,seasonF:'all'}}
 function sampleState(){
   const s=fresh();
   s.opp='Calvin Christian';s.date='2026-11-02';
@@ -369,13 +412,24 @@ let S=fresh();
 try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);if(o&&o.t&&o.t.r&&o.t.o)S=Object.assign(fresh(),o)}}catch(e){}
 function save(){try{syncGame()}catch(e){}try{liveMark()}catch(e){}store()}
 function store(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function carry(n){n.links=S.links||{};n.liveDel=S.liveDel||[];return n}
+function carry(n){n.links=S.links||{};n.liveDel=S.liveDel||[];n.roster=S.roster;n.seasonF=S.seasonF;return n}
+function rosterNames(){const r=(S.roster||[]).map(x=>String(x).trim()).filter(Boolean);return r}
+function ensureState(){
+  if(!Array.isArray(S.roster))S.roster=S.t.r.players.map(p=>p.name);
+  if(!Array.isArray(S.games))S.games=[];
+  S.fix=false;
+  if(['r','o','s'].indexOf(S.tab)<0)S.tab='r';
+  const saved=S.games.some(g=>g.id===S.gid);
+  if(saved)S.started=true;
+  S.final=!!S.final;
+  S.view=saved&&!S.final?'game':'home';
+}
 const STANDALONE=!!window.__STANDALONE;
 
 function cloneJ(o){return JSON.parse(JSON.stringify(o))}
 function snapshot(st){
   st=st||S;
-  return cloneJ({id:st.gid,opp:st.opp,date:st.date,atk:st.t.r.atk,players:st.t.r.players.map(p=>({name:p.name,c:p.c})),missed:st.missed,missedO:st.missedO||0,sets:(st.sets||[]).map(x=>x.slice()),o:{atk:st.t.o.atk,players:st.t.o.players.map(p=>({name:p.name,c:p.c}))}});
+  return cloneJ({id:st.gid,opp:st.opp,date:st.date,atk:st.t.r.atk,players:st.t.r.players.map(p=>({name:p.name,c:p.c})),missed:st.missed,missedO:st.missedO||0,final:!!st.final,sets:(st.sets||[]).map(x=>x.slice()),o:{atk:st.t.o.atk,players:st.t.o.players.map(p=>({name:p.name,c:p.c}))}});
 }
 function hasData(){
   const a=sumAtk(S.t.r.atk),b=sumAtk(S.t.o.atk),pt=passTotals(S.t.r.players),po=passTotals(S.t.o.players);
@@ -383,28 +437,41 @@ function hasData(){
 }
 function syncGame(){
   const i=S.games.findIndex(g=>g.id===S.gid);
-  if(i<0&&!hasData())return;
+  if(i<0&&!hasData()&&!S.started)return;
   const sn=snapshot();
   if(i>=0)S.games[i]=sn;else S.games.push(sn);
 }
 function loadTeam(t){return{atk:cloneJ(t.atk),players:t.players.map(p=>({id:uid(),name:p.name,c:p.c.slice()}))}}
 function openGame(id,tab){
   const g=S.games.find(x=>x.id===id);if(!g)return;
-  const legacy=!g.o;
   if(g.id!==S.gid){
     S.gid=g.id;S.opp=g.opp||'';S.date=g.date||today();
     S.t.r=loadTeam({atk:g.atk,players:g.players});
     S.t.o=g.o?loadTeam(g.o):mkTeam([]);
     S.missed=g.missed||0;S.missedO=g.missedO||0;S.sets=cloneJ(g.sets||[]);
-    S.hist=[];S.fix=false;lastD=null;
+    S.final=!!g.final;S.started=true;
+    S.hist=[];lastD=null;
   }
-  S.tab=tab==='o'?'o':'r';armed=null;save();setHeader();render();window.scrollTo(0,0);
-  toast(legacy?(tab==='o'?'Opened on the Opponent tab. Tap in their numbers.':'Opened. Opponent stats were not saved for this older game.'):'Opened '+shortDate(g.date)+' vs '+(g.opp||'Opponent'));
+  S.view='game';S.tab=tab==='o'?'o':tab==='r'?'r':(g.final?'s':'r');armed=null;save();render();window.scrollTo(0,0);
+  if(!g.o&&tab==='o')toast('Tap in their numbers on this tab.');
 }
-function newGameLabel(){return armed==='reset'?'Tap again to start a new game (this one stays in Games)':'New game'}
-function pastBar(){
-  if(!hasData()||S.date===today())return '';
-  return '<div class="pastbar"><span>Editing a past game: '+esc(shortDate(S.date))+' vs '+esc(S.opp||'Opponent')+'</span><button class="act warn'+(armed==='reset'?' armed':'')+'" data-act="reset">'+(armed==='reset'?'Tap again':'New game')+'</button></div>';
+function startGame(opp,date){
+  const n=fresh();n.t.r=mkTeam(rosterNames());n.opp=opp;n.date=date||today();n.games=S.games;carry(n);
+  n.view='game';n.tab='r';n.started=true;S=n;lastD=null;save();render();window.scrollTo(0,0);
+}
+let UNDO=null;
+function deleteGame(id){
+  UNDO={state:cloneJ(S),id:id};
+  S.games=S.games.filter(g=>g.id!==id);
+  if(id===S.gid){const n=fresh();n.t.r=mkTeam(rosterNames());n.games=S.games;carry(n);n.view='home';S=n;lastD=null}
+  liveStop(id);save();render();
+  toastAct('Game deleted','Undo');
+}
+function undoDelete(){
+  if(!UNDO)return;
+  const st=UNDO.state,id=UNDO.id;UNDO=null;
+  if(st.links&&st.links[id]){st.links[id].dirty=true;st.links[id].h=''}
+  S=st;save();render();toast('Game restored');liveKick(0);
 }
 
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -420,7 +487,6 @@ function applyTheme(){
   if(THEME==='light'||THEME==='dark')root.setAttribute('data-theme',THEME);
   else if(hostTheme)root.setAttribute('data-theme',hostTheme);
   else root.removeAttribute('data-theme');
-  document.getElementById('themeBtn').textContent=THEME==='auto'?'Auto':THEME==='dark'?'Dark':'Light';
 }
 function cycleTheme(){
   THEME=THEME==='auto'?'dark':THEME==='dark'?'light':'auto';
@@ -465,7 +531,8 @@ function flash(d){
   if(b){b.classList.add('flash');setTimeout(()=>b.classList.remove('flash'),300)}
 }
 let tt;
-function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),1700)}
+function toast(m){const t=document.getElementById('toast');t.classList.remove('act');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),1700)}
+function toastAct(m,label){const t=document.getElementById('toast');t.innerHTML='<span>'+esc(m)+'</span><button class="tbtn" data-act="toastundo">'+esc(label)+'</button>';t.classList.add('show','act');clearTimeout(tt);tt=setTimeout(()=>{t.classList.remove('show','act');UNDO=null},6000)}
 
 /* views */
 function hitBtn(cls,d,label,val){
@@ -520,7 +587,7 @@ function passSection(k){
   return h;
 }
 function teamView(k){
-  return pastBar()+board(k)+errCard(k)+missCard(k)+attackSection(k)+passSection(k);
+  return board(k)+errCard(k)+missCard(k)+attackSection(k)+passSection(k);
 }
 function teamInner(kcls,name,atk,players,missed){
   const a=sumAtk(atk),e=errTotals(atk,players,missed),tot=passTotals(players);
@@ -540,23 +607,86 @@ function sheetTeam(k){
   const T=S.t[k];
   return '<section class="card">'+teamInner(k,teamName(k),T.atk,T.players,k==='r'?S.missed:(S.missedO||0))+'</section>';
 }
-function sheetView(){
-  const resetLbl=newGameLabel();
+function chipOf(g){
+  const w=setsWon(g);
+  if(!g.final)return{c:'p',t:'In progress'+(w.n?' '+w.r+'–'+w.o:'')};
+  if(!w.n)return{c:'f',t:'Final'};
+  return w.r>w.o?{c:'w',t:'W '+w.r+'–'+w.o}:w.r<w.o?{c:'l',t:'L '+w.r+'–'+w.o}:{c:'f',t:'T '+w.r+'–'+w.o};
+}
+function homeView(){
+  let h='<button class="act save big" data-act="newgame">+ New game</button>';
+  const G=S.games.map((g,i)=>({g:g,i:i})).sort((x,y)=>((y.g.date||'').localeCompare(x.g.date||''))||(y.i-x.i)).map(o=>o.g);
+  if(!G.length)return h+'<section class="card"><h3 class="h3">No games yet</h3><p class="note">Tap New game, type who you are playing, then tap stats as they happen. Every tap saves on its own.</p><button class="act" data-act="sample">Try the Nov 2 sample game</button></section>';
+  h+='<h2 class="sec">Games <small>'+G.length+' saved · tap one to open</small></h2><div class="glist">';
+  G.forEach(g=>{
+    const ch=chipOf(g),a=sumAtk(g.atk),m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(g.date||'');
+    const mon=m?new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString('en-CA',{month:'short'}):'–',day=m?+m[3]:'';
+    h+='<div class="grow2"><button class="gr'+(g.id===S.gid&&!g.final?' cur':'')+'" data-act="open" data-id="'+g.id+'">'+
+      '<span class="gd"><b>'+esc(mon)+'</b><strong>'+day+'</strong></span>'+
+      '<span class="gm2"><b>vs '+esc(g.opp||'Opponent')+'</b><small><span class="chip '+ch.c+'">'+ch.t+'</span><span>'+(a.n?'Kill % '+pct(a.kp):'No stats yet')+'</span></small></span></button>'+
+      '<button class="more" data-act="gmore" data-id="'+g.id+'" aria-label="More for this game">⋯</button></div>';
+  });
+  return h+'</div>';
+}
+function summaryView(){
+  const g=snapshot(),w=setsWon(g),ch=chipOf(g);
+  let h='<section class="card res"><span class="chip '+ch.c+'">'+ch.t+'</span><b class="resline">'+esc(w.n?finalLine(g,true):'Royals vs '+(S.opp||'Opponent'))+'</b>'+
+    (w.n?'':'<p class="note">Add set scores below to show the result.</p>')+'</section>';
+  h+=setsCard();
+  h+=S.final?'<div class="grow"><button class="act go" data-act="sharemenu" data-id="cur" style="flex:2">Share</button><button class="act" data-act="reopen" style="flex:1">Reopen</button></div>'
+    :'<button class="act save" data-act="finish">Finish game</button><button class="act go" data-act="sharemenu" data-id="cur">Share</button>';
+  const oa=sumAtk(S.t.o.atk),op=passTotals(S.t.o.players);
+  const oppEmpty=oa.n+op[0]+op[1]+op[2]+op[3]+(S.missedO||0)===0;
+  h+='<h2 class="sec">Head to head</h2><section class="card">'+cmpTable(g)+
+    (oppEmpty?'<p class="oppline">No opponent stats yet.</p><button class="act" data-act="tab" data-tab="o">Add opponent stats</button>':'')+'</section>';
+  h+=sheetTeam('r')+sheetTeam('o');
+  return h;
+}
+function settingsView(){
+  const R=S.roster||[];
+  let h='<section class="card"><h3 class="h3">Royals roster</h3><p class="note">Every new game starts with these players. You can still add or remove players inside a game.</p>'+
+    R.map((n,i)=>'<div class="rosrow"><input class="rosin" data-ri="'+i+'" value="'+esc(n)+'" placeholder="Name or #" autocomplete="off" aria-label="Roster player '+(i+1)+'"><button class="x" data-act="rosrm" data-i="'+i+'" aria-label="Remove player">✕</button></div>').join('')+
+    '<button class="add" data-act="rosadd">+ Add player</button></section>';
+  h+='<section class="card"><h3 class="h3">Colours</h3><div class="seg3">'+['auto','light','dark'].map(v=>'<button class="segb'+(THEME===v?' on':'')+'" data-act="settheme" data-v="'+v+'">'+({auto:'Auto',light:'Light',dark:'Dark'})[v]+'</button>').join('')+'</div></section>';
+  h+='<section class="card"><h3 class="h3">Tips</h3><p class="note">Hold any stat button for a second to take one away. Undo is at the top of every game. Every tap saves on its own, and Finish game on the Summary tab marks it final.</p></section>';
   const restoreLbl=armed==='restore'?'Tap again to replace everything on this device':'Restore from pasted backup';
-  return '<div class="sheet">'+setsCard()+
-    '<section class="card"><h3 class="h3">Share this game</h3>'+finBtns('cur')+'</section>'+
-    sheetTeam('r')+sheetTeam('o')+
-    '<p class="note">Games save automatically as you tap. Find them on the Games tab.</p>'+
-    '<button class="act" data-act="copy">Copy full stats as text</button>'+
-    '<button class="act" data-act="sample">Add the Nov 2 game from the paper sheet</button>'+
-    '<button class="act warn'+(armed==='reset'?' armed':'')+'" data-act="reset">'+resetLbl+'</button>'+
-    '<section class="card"><h3 class="h3">Backup and move to another device</h3>'+
-    '<p class="note">Copy backup turns every saved game and the current game into text. On another device, open the app, paste it below and tap Restore.</p>'+
+  h+='<section class="card"><h3 class="h3">Backup and move to another device</h3>'+
+    '<p class="note">Copy backup turns every game into text. On another device, open the app, paste it below and tap Restore.</p>'+
     '<button class="act go" data-act="bkcopy">Copy backup</button>'+
     '<textarea id="bkBox" placeholder="Paste a backup here to restore" aria-label="Backup text">'+esc(bkText)+'</textarea>'+
-    '<button class="act warn'+(armed==='restore'?' armed':'')+'" data-act="restore">'+restoreLbl+'</button></section>'+
-    (STANDALONE?'<section class="card"><h3 class="h3">App version</h3><p class="note">Version '+esc(VERSION)+'. Updating the app never changes the stats saved on this device.</p><a class="act" href="/admin">Update this app</a></section>':'')+
-    '</div>';
+    '<button class="act warn'+(armed==='restore'?' armed':'')+'" data-act="restore">'+restoreLbl+'</button></section>';
+  h+='<button class="act" data-act="sample">Add the Nov 2 sample game</button>';
+  h+='<section class="card"><h3 class="h3">App version</h3><p class="note">You are on version <b>'+esc(VERSION)+'</b>. Updates install on their own and never change your saved stats.</p>'+
+    (STANDALONE?'<a class="act" href="/admin">Install an update by hand</a>':'')+'</section>';
+  return h;
+}
+function openGameForm(isNew){
+  const names=rosterNames();
+  openSheet('<h3 class="h3" id="shTitle">'+(isNew?'New game':'Edit game')+'</h3>'+
+    '<label class="fld"><span>Opponent</span><input id="gfOpp" class="rosin" autocomplete="off" placeholder="Who are you playing?" value="'+esc(isNew?'':S.opp)+'"></label>'+
+    '<label class="fld"><span>Date</span><input id="gfDate" class="rosin" type="date" value="'+esc(isNew?today():S.date)+'"></label>'+
+    (isNew?'<p class="note">'+(names.length?'Royals players: '+esc(names.join(', '))+'. Change the roster in Settings.':'No Royals roster yet. Add players in Settings, or inside the game.')+'</p>':'')+
+    '<button class="act save" data-act="'+(isNew?'gfstart':'gfsave')+'" id="gfGo">'+(isNew?'Start game':'Save')+'</button><button class="act" data-act="shclose">Cancel</button>',{mode:'form'});
+  setTimeout(()=>{const i=document.getElementById('gfOpp');if(i)i.focus()},60);
+}
+function openShareMenu(id){
+  const g=gameFor(id);if(!g){toast('Nothing to share yet');return}
+  const o=(t,a,d,c)=>'<button class="act opt'+(c?' '+c:'')+'" data-act="'+a+'" data-id="'+id+'"><b>'+t+'</b><small>'+d+'</small></button>';
+  openSheet('<h3 class="h3" id="shTitle">Share</h3><p class="note">'+esc(finalLine(g))+' · '+esc(shortDate(g.date))+'</p>'+
+    o('Summary picture','fpic','Every stat for both teams, as one picture','go')+
+    o('Recap post','frecap','A short post for social media')+
+    o('Link &amp; QR code','flink','A web page anyone can open for 30 days')+
+    o('Spreadsheet','fcsv','A file for Excel or Google Sheets')+
+    o('Copy all stats as text','fcopy','For a text message or email')+
+    '<button class="act" data-act="shclose">Close</button>',{mode:'menu'});
+}
+function openGameMenu(id){
+  const g=S.games.find(x=>x.id===id);if(!g)return;
+  openSheet('<h3 class="h3" id="shTitle">vs '+esc(g.opp||'Opponent')+'</h3><p class="note">'+esc(shortDate(g.date))+' · '+chipOf(g).t+'</p>'+
+    '<button class="act open" data-act="open" data-id="'+g.id+'">Open game</button>'+
+    '<button class="act go" data-act="sharemenu" data-id="'+g.id+'">Share</button>'+
+    '<button class="act warn" data-act="gdel" data-id="'+g.id+'">Delete game</button>'+
+    '<button class="act" data-act="shclose">Close</button>',{mode:'gmenu'});
 }
 
 /* season + trends */
@@ -609,14 +739,18 @@ function trends(G){
     trendCard('Pass avg',pa,labels,f1,3,0,3,false);
 }
 function seasonView(){
-  const G=S.games,ag=aggregate(G),a=sumAtk(ag.atk),tot=passTotals(ag.players);
+  const all=S.games.map((g,i)=>({g:g,i:i})).sort((x,y)=>((y.g.date||'').localeCompare(x.g.date||''))||(y.i-x.i)).map(o=>o.g);
+  const f=S.seasonF==='5'?'5':'all',G=f==='5'?all.slice(0,5):all,ag=aggregate(G),a=sumAtk(ag.atk),tot=passTotals(ag.players);
   if(!G.length){
     return '<section class="card"><h3 class="h3">No games saved yet</h3>'+
-      '<p class="note">Games save automatically as you tap, and every one is added up here. Start tracking on the Royals tab.</p>'+
-      '<button class="act save" data-act="tab" data-tab="r">Go to Royals</button></section>';
+      '<p class="note">Every game you track is added up here. Start one from the Games screen.</p>'+
+      '<button class="act save" data-act="newgame">+ New game</button></section>';
   }
   const n=G.length,se=errTotals(ag.atk,ag.players,ag.missed);
-  let h='<section class="board z" aria-label="Season totals">'+
+  const rec=G.reduce((r,g)=>{const w=setsWon(g);if(!w.n)return r;r.n++;if(w.r>w.o)r.w++;else if(w.o>w.r)r.l++;r.sw+=w.r;r.sl+=w.o;return r},{n:0,w:0,l:0,sw:0,sl:0});
+  let h='<div class="seg"><button class="segb'+(f==='all'?' on':'')+'" data-act="sfilt" data-v="all">All games</button><button class="segb'+(f==='5'?' on':'')+'" data-act="sfilt" data-v="5">Last 5</button></div>';
+  h+=rec.n?'<section class="card rec"><div><span>Record</span><b>'+rec.w+'–'+rec.l+'</b></div><div><span>Sets</span><b>'+rec.sw+'–'+rec.sl+'</b></div></section>':'<p class="note">Add set scores when you finish a game to track the win–loss record.</p>';
+  h+='<section class="board z" aria-label="Season totals">'+
     '<div class="tile"><span>Kill %</span><b>'+pct(a.kp)+'</b></div>'+
     '<div class="tile"><span>Kill Eff %</span><b>'+pct(a.eff)+'</b></div>'+
     '<div class="tile"><span>Pass avg</span><b>'+f1(passAvg(tot))+'</b></div>'+
@@ -634,12 +768,12 @@ function seasonView(){
   [3,2,1].forEach(pr=>{const r=ag.atk[pr],s=rowStats(r);
     rows+='<tr><th scope="row">'+pr+'</th><td>'+r.k+'</td><td>'+r.e+'</td><td>'+r.pc+'</td><td>'+pct(s.kp)+'</td><td>'+pct(s.eff)+'</td></tr>'});
   rows+='<tr class="tot"><th scope="row">All</th><td>'+a.k+'</td><td>'+a.e+'</td><td>'+a.pc+'</td><td>'+pct(a.kp)+'</td><td>'+pct(a.eff)+'</td></tr>';
-  h+='<h2 class="sec">Season attack <small>all games</small></h2><section class="card"><div class="scroll"><table class="tbl"><thead><tr><th>Pass</th><th>Kill</th><th>Error</th><th>PC</th><th>Kill %</th><th>Eff %</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>';
+  h+='<h2 class="sec">Season attack <small>'+(f==='5'?'last 5 games':'all games')+'</small></h2><section class="card"><div class="scroll"><table class="tbl"><thead><tr><th>Pass</th><th>Kill</th><th>Error</th><th>PC</th><th>Kill %</th><th>Eff %</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>';
   let pr='';
   ag.players.forEach(p=>{pr+='<tr><th scope="row">'+esc(p.name)+'</th><td>'+p.c[0]+'</td><td>'+p.c[1]+'</td><td>'+p.c[2]+'</td><td>'+p.c[3]+'</td><td>'+f1(passAvg(p.c))+'</td></tr>'});
   pr+='<tr class="tot"><th scope="row">Total</th><td>'+tot[0]+'</td><td>'+tot[1]+'</td><td>'+tot[2]+'</td><td>'+tot[3]+'</td><td>'+f1(passAvg(tot))+'</td></tr>';
   h+='<h2 class="sec">Season passing <small>by player name</small></h2><section class="card"><div class="scroll"><table class="tbl"><thead><tr><th>Player</th><th>3</th><th>2</th><th>1</th><th>0</th><th>Avg</th></tr></thead><tbody>'+pr+'</tbody></table></div></section>';
-  h+='<button class="act open" data-act="tab" data-tab="g">See every game</button>';
+  h+='<button class="act open" data-act="home">See every game</button>';
   return h;
 }
 function cmpTable(g){
@@ -649,28 +783,6 @@ function cmpTable(g){
   const rows=[['Kill %',pct(ra.kp),oc[0]],['Kill Eff %',pct(ra.eff),oc[1]],['Pass avg',f1(rp),oc[2]],['Total errors',re.t,oc[3]]];
   return '<div class="scroll"><table class="tbl cmp"><thead><tr><th></th><th><span class="tag r">Royals</span></th><th><span class="tag o">'+esc(g.opp||'Opponent')+'</span></th></tr></thead><tbody>'+
     rows.map(r=>'<tr><th scope="row">'+r[0]+'</th><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>').join('')+'</tbody></table></div>';
-}
-function gamesView(){
-  const G=S.games;
-  const ng='<button class="act '+(armed==='reset'?'warn armed':'save')+'" data-act="reset">'+(armed==='reset'?newGameLabel():'Start a new game')+'</button>';
-  if(!G.length){
-    return ng+'<section class="card"><h3 class="h3">No games yet</h3><p class="note">Games save automatically as you tap, then show up here so you can come back to them. Start tracking on the Royals tab.</p><button class="act open" data-act="tab" data-tab="r">Go to Royals</button></section>';
-  }
-  const rows=G.map((g,i)=>({g:g,i:i})).sort((x,y)=>((y.g.date||'').localeCompare(x.g.date||''))||(y.i-x.i));
-  let h=ng+'<h2 class="sec">Past games <small>'+G.length+' saved</small></h2>';
-  rows.forEach(o=>{
-    const g=o.g,here=g.id===S.gid,arm=armed==='dg:'+g.id,ex=!!openIds[g.id];
-    h+='<section class="card"><div class="gh"><b>'+esc(g.date||'No date')+(here?'<span class="here">Open now</span>':'')+'<small>vs '+esc(g.opp||'Opponent')+'</small></b>'+
-      '<button class="x'+(arm?' armed':'')+'" data-act="dg" data-id="'+g.id+'" aria-label="Delete game">'+(arm?'Delete?':'✕')+'</button></div>'+
-      setsTable(g)+cmpTable(g)+
-      (g.o?'':'<p class="oppline">Opponent stats were not saved for this game (it was entered before the app kept both teams).</p><button class="act go" data-act="open" data-id="'+g.id+'" data-go="o">Add opponent stats</button>')+
-      finBtns(g.id)+
-      '<div class="grow"><button class="act open" data-act="open" data-id="'+g.id+'">'+(here?'Back to this game':'Open this game')+'</button>'+
-      '<button class="act" data-act="gx" data-id="'+g.id+'" aria-expanded="'+ex+'">'+(ex?'Hide full stats':'Full stats')+'</button></div>'+
-      (ex?'<div class="blk">'+teamInner('r','Royals',g.atk,g.players,g.missed)+'</div>'+(g.o?'<div class="blk">'+teamInner('o',g.opp||'Opponent',g.o.atk,g.o.players,g.missedO||0)+'</div>':''):'')+
-      '</section>';
-  });
-  return h;
 }
 function gameText(g){
   const L=[];
@@ -1186,20 +1298,36 @@ function copyText(txt,box,msg){
 }
 
 function render(){
+  const inGame=!VIEW&&S.view==='game';
   document.body.classList.toggle('viewer',!!VIEW);
-  document.querySelector('h1').textContent=VIEW?(LIVE?'Game Summary':'Game Report'):'Attack Stats';
-  if(VIEW){document.getElementById('app').innerHTML=viewerHtml();return}
-  document.body.classList.toggle('fix',S.fix);
-  document.getElementById('fixBtn').setAttribute('aria-pressed',String(S.fix));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===S.tab));
-  document.getElementById('oppTab').textContent=S.opp||'Opponent';
-  const last=S.hist[S.hist.length-1];
-  document.getElementById('lastLine').textContent=last?'Last: '+describe(last.d)+(last.delta<0?' (−1)':''):'Nothing yet';
-  const fx=S.fix?'<div class="fixbar">FIX MODE: every tap subtracts 1. Tap Fix again to go back.</div>':'';
-  const app=document.getElementById('app');
-  app.innerHTML=fx+(S.tab==='s'?sheetView():S.tab==='z'?seasonView():S.tab==='g'?gamesView():teamView(S.tab));
+  document.body.classList.toggle('ingame',inGame);
+  document.getElementById('appHd').hidden=inGame;
+  document.getElementById('gameHd').hidden=!inGame;
+  const nav=document.getElementById('bnav'),h1=document.querySelector('h1'),app=document.getElementById('app');
+  document.getElementById('verTag').textContent='v '+VERSION;
+  if(VIEW){h1.textContent=LIVE?'Game Summary':'Game Report';nav.hidden=true;app.innerHTML=viewerHtml();return}
+  nav.hidden=false;
+  if(inGame){
+    nav.innerHTML='<div class="bin">'+['r','o','s'].map(k=>'<button class="tab'+(S.tab===k?' on':'')+'" data-act="tab" data-tab="'+k+'">'+esc(k==='r'?'Royals':k==='o'?(S.opp||'Opponent'):'Summary')+'</button>').join('')+'</div>';
+    setHeader();
+    const last=S.hist[S.hist.length-1],ll=document.getElementById('lastLine');
+    ll.hidden=S.tab==='s';
+    ll.textContent=last?'Last: '+describe(last.d)+(last.delta<0?' (−1)':''):'Hold any button to take one away';
+    document.getElementById('undoBtn').style.visibility=S.tab==='s'?'hidden':'';
+    app.innerHTML=S.tab==='s'?summaryView():teamView(S.tab);
+  }else{
+    const v=S.view==='season'?'z':S.view==='settings'?'t':'g';
+    h1.textContent=v==='z'?'Season':v==='t'?'Settings':'Games';
+    nav.innerHTML='<div class="bin">'+[['g','home','Games'],['z','season','Season'],['t','settings','Settings']].map(x=>'<button class="tab'+(v===x[0]?' on':'')+'" data-act="view" data-v="'+x[1]+'" data-tab="'+x[0]+'">'+x[2]+'</button>').join('')+'</div>';
+    app.innerHTML=v==='z'?seasonView():v==='t'?settingsView():homeView();
+  }
 }
-function setHeader(){document.getElementById('oppName').value=S.opp;document.getElementById('gameDate').value=S.date}
+function setHeader(){
+  const t=document.getElementById('gTitle');if(!t)return;
+  t.textContent=S.opp||'Opponent';
+  const w=setsWon(S);
+  document.getElementById('gSub').textContent=shortDate(S.date)+' · '+(S.final?'Final'+(w.n?' '+(w.r>w.o?'W ':w.r<w.o?'L ':'')+w.r+'–'+w.o:''):'In progress'+(w.n?' · sets '+w.r+'–'+w.o:''))+' ✎';
+}
 
 document.addEventListener('click',e=>{
   const b=e.target.closest('[data-act]');
@@ -1208,7 +1336,23 @@ document.addEventListener('click',e=>{
   const akey=(a==='rm'||a==='dg')?a+':'+b.dataset.id:a;
   if(armed&&armed!==akey){armed=null}
   if(a==='tab'){S.tab=b.dataset.tab;save();render();window.scrollTo(0,0)}
-  else if(a==='hit')bump(b.dataset.d,S.fix?-1:1);
+  else if(a==='view'){S.view=b.dataset.v;armed=null;save();render();window.scrollTo(0,0)}
+  else if(a==='home'){if(SH)closeShare();S.view='home';armed=null;save();render();window.scrollTo(0,0)}
+  else if(a==='newgame')openGameForm(true);
+  else if(a==='editgame')openGameForm(false);
+  else if(a==='gfstart'){const o=document.getElementById('gfOpp').value.trim(),d=document.getElementById('gfDate').value||today();closeShare();startGame(o,d);toast('Game started')}
+  else if(a==='gfsave'){S.opp=document.getElementById('gfOpp').value.trim();S.date=document.getElementById('gfDate').value||S.date;closeShare();save();render()}
+  else if(a==='gmore')openGameMenu(b.dataset.id);
+  else if(a==='sharemenu')openShareMenu(b.dataset.id);
+  else if(a==='gdel'){const id=b.dataset.id;closeShare();deleteGame(id)}
+  else if(a==='toastundo'){const t=document.getElementById('toast');t.classList.remove('show','act');undoDelete()}
+  else if(a==='finish'){S.final=true;S.started=true;save();render();openShareMenu('cur')}
+  else if(a==='reopen'){S.final=false;save();render();toast('Game reopened')}
+  else if(a==='sfilt'){S.seasonF=b.dataset.v;save();render()}
+  else if(a==='settheme'){THEME=b.dataset.v;try{THEME==='auto'?localStorage.removeItem(THEME_KEY):localStorage.setItem(THEME_KEY,THEME)}catch(e){}applyTheme();render()}
+  else if(a==='rosadd'){S.roster.push('');save();render();const ins=document.querySelectorAll('.rosin');const l=ins[ins.length-1];if(l){l.scrollIntoView({block:'center'});l.focus()}}
+  else if(a==='rosrm'){S.roster.splice(+b.dataset.i,1);save();render()}
+  else if(a==='hit'){if(b.dataset.d===lpD&&Date.now()-lpAt<700)return;bump(b.dataset.d,1)}
   else if(a==='miss+')bump(b.dataset.d,1);
   else if(a==='miss-')bump(b.dataset.dm,-1);
   else if(a==='undo')undo();
@@ -1238,15 +1382,15 @@ document.addEventListener('click',e=>{
     let o=null;
     try{const p=JSON.parse(bkText);o=p&&p.data?p.data:p}catch(err){}
     if(!validBackup(o)){render();toast("That text isn't a valid backup");return}
-    const n=Object.assign(fresh(),o);n.hist=[];n.fix=false;n.tab='s';if(!Array.isArray(n.games))n.games=[];
-    S=n;lastD=null;save();setHeader();render();toast('Backup restored');
+    const n=Object.assign(fresh(),o);n.hist=[];n.fix=false;n.tab='r';if(!Array.isArray(n.games))n.games=[];
+    S=n;ensureState();S.view='home';lastD=null;save();render();toast('Backup restored');
   }
-  else if(a==='open')openGame(b.dataset.id,b.dataset.go);
+  else if(a==='open'){if(SH)closeShare();openGame(b.dataset.id,b.dataset.go)}
   else if(a==='gx'){openIds[b.dataset.id]=!openIds[b.dataset.id];render()}
-  else if(a==='fpic'||a==='frecap'||a==='fcsv'||a==='flink'){
+  else if(a==='fpic'||a==='frecap'||a==='fcsv'||a==='flink'||a==='fcopy'){
     const g=gameFor(b.dataset.id);
     if(!g){toast('Nothing to share yet');return}
-    if(a==='fpic')openPic(g);else if(a==='frecap')openRecap(g);else if(a==='fcsv')exportCsv(g);else openLink(g.id);
+    if(a==='fpic')openPic(g);else if(a==='frecap')openRecap(g);else if(a==='fcsv'){closeShare();exportCsv(g)}else if(a==='fcopy'){closeShare();copyOut(shortText(g),'Stats copied')}else openLink(g.id);
   }
   else if(a==='pshare')sharePic();
   else if(a==='ptext'){if(SH)shareTextOut(shortText(SH.g))}
@@ -1283,7 +1427,7 @@ document.addEventListener('click',e=>{
   else if(a==='sample'){
     if(S.games.some(g=>g.id===SAMPLE_ID))toast('The Nov 2 game is already in Games');
     else{S.games.push(snapshot(sampleState()));toast('Nov 2 game added to Games')}
-    S.tab='g';save();render();window.scrollTo(0,0);
+    S.view='home';save();render();window.scrollTo(0,0);
   }
   else if(a==='reset'){
     if(armed==='reset'){
@@ -1301,20 +1445,36 @@ document.addEventListener('input',e=>{
     S.opp=t.value;save();document.getElementById('oppTab').textContent=S.opp||'Opponent';
   }else if(t.id==='gameDate'){S.date=t.value;save()}
   else if(t.id==='bkBox'){bkText=t.value}
+  else if(t.classList.contains('rosin')&&t.dataset.ri!==undefined){S.roster[+t.dataset.ri]=t.value;save()}
   else if(t.classList.contains('setin')){
     const i=+t.dataset.i,k=+t.dataset.k,row=S.sets&&S.sets[i];
     if(row){const v=t.value===''?null:Math.max(0,Math.min(99,parseInt(t.value,10)||0));row[k]=v;save()}
   }
 });
 
+let lpT=null,lpAt=0,lpX=0,lpY=0,lpD=null;
+document.addEventListener('pointerdown',e=>{
+  const b=e.target.closest('.btn.hit');if(!b||VIEW)return;
+  clearTimeout(lpT);lpX=e.clientX;lpY=e.clientY;
+  lpT=setTimeout(()=>{
+    lpAt=Date.now();const d=b.dataset.d,L=locate(d);lpD=d;
+    if(!L||L.o[L.k]<=0){toast('Already at 0');return}
+    bump(d,-1);try{navigator.vibrate&&navigator.vibrate([20,40,20])}catch(x){}
+    toast('Took one away: '+describe(d));
+  },550);
+});
+document.addEventListener('pointermove',e=>{if(lpT&&(Math.abs(e.clientX-lpX)>12||Math.abs(e.clientY-lpY)>12)){clearTimeout(lpT);lpT=null}},{passive:true});
+['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,()=>{clearTimeout(lpT);lpT=null},true));
+document.addEventListener('contextmenu',e=>{if(e.target.closest('.btn.hit'))e.preventDefault()});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.id==='gfOpp'){e.preventDefault();const g=document.getElementById('gfGo');if(g)g.click()}});
 async function keepAwake(){
   try{if(navigator.wakeLock&&document.visibilityState==='visible')await navigator.wakeLock.request('screen')}catch(e){}
 }
 document.addEventListener('visibilitychange',keepAwake);
 keepAwake();
 if(!hasData()&&!S.games.some(g=>g.id===S.gid)&&S.date!==today())S.date=today();
+ensureState();
 applyTheme();
-setHeader();
 window.addEventListener('hashchange',route);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&SH)closeShare()});
 route();

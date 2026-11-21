@@ -10,6 +10,9 @@ def chk(n,c):
 MOCK='''window.__shares=[];window.__canFiles=true;
 navigator.canShare=function(d){return !!(d&&d.files&&window.__canFiles)};
 navigator.share=async function(d){window.__shares.push({text:d.text||null,url:d.url||null,title:d.title||null,files:d.files?d.files.map(f=>({name:f.name,type:f.type,size:f.size})):null});};'''
+def share(pg,opt):
+    pg.click('[data-act=sharemenu][data-id=cur]')
+    pg.click('#shpanel [data-act='+opt+']')
 def wait_for(pg,js,t=8):
     end=time.time()+t
     while time.time()<end:
@@ -38,7 +41,7 @@ with sync_playwright() as p:
         chk(tag+'no overflow on sheet',pg.evaluate('document.documentElement.scrollWidth<=innerWidth'))
         if W==390: pg.screenshot(path='t4_sheet.png')
         # picture
-        pg.click('[data-act=fpic][data-id=cur]')
+        share(pg,'fpic')
         ok=wait_for(pg,"(()=>{const c=document.getElementById('picCv');if(!c)return false;const d=c.getContext('2d').getImageData(500,5,1,1).data;return d[0]>240&&d[1]>180&&d[2]<90})()")
         chk(tag+'picture drawn (accent bar)',ok)
         chk(tag+'picture is 1080 wide, at least 1350 tall',pg.evaluate("picCv.width===1080&&picCv.height>=1350"))
@@ -60,7 +63,7 @@ with sync_playwright() as p:
         chk(tag+'text summary',s and s['text'].startswith('FINAL: Royals 3, Calvin Christian 1') and 'Sets: 25-21, 22-25, 25-19, 25-17' in s['text'] and 'Passing avg' in s['text'] and 'CALVIN CHRISTIAN' in s['text'] and 'Total errors' in s['text'])
         pg.click('#shpanel [data-act=shclose]')
         # recap
-        pg.click('[data-act=frecap][data-id=cur]')
+        share(pg,'frecap')
         t1=pg.input_value('#rcBox')
         chk(tag+'recap emoji start/end',t1.startswith('🏐') and t1.rstrip()[-1] in '💙👑💜🙌💪')
         chk(tag+'recap uses real result',('3–1' in t1) and 'Calvin Christian' in t1)
@@ -70,11 +73,12 @@ with sync_playwright() as p:
         chk(tag+'recap shared',pg.evaluate("window.__shares.pop().text")==t2)
         pg.click('#shpanel [data-act=shclose]')
         # spreadsheet
-        with pg.expect_download() as d: pg.click('[data-act=fcsv][data-id=cur]')
+        pg.click('[data-act=sharemenu][data-id=cur]')
+        with pg.expect_download() as d: pg.click('#shpanel [data-act=fcsv]')
         csv=open(d.value.path(),encoding='utf-8-sig').read()
         chk(tag+'spreadsheet export',d.value.suggested_filename.endswith('.csv') and 'Royals,Pass 3,14,5,2,21,66.7%,42.9%' in csv and 'Calvin Christian,All' in csv and 'Set 4' in csv)
         # link + QR
-        pg.click('[data-act=flink][data-id=cur]')
+        share(pg,'flink')
         chk(tag+'link goes live',wait_for(pg,"(document.getElementById('lkStat')||{}).textContent==='Link is live ✓'"))
         link=pg.input_value('#lkUrl')
         chk(tag+'link format',link.startswith('http://localhost:8787/?live=') and len(link.split('=')[1])==6)
@@ -122,7 +126,7 @@ with sync_playwright() as p:
         newlink='http://localhost:8787/?live='+pg.evaluate("S.links[S.gid].code")
         # stop sharing
         pg.evaluate("()=>{S.tab='s';render()}")
-        pg.click('[data-act=flink][data-id=cur]')
+        share(pg,'flink')
         chk(tag+'reopened link keeps code',pg.input_value('#lkUrl')==newlink)
         pg.click('[data-act=lstop]');pg.click('[data-act=lstop]')
         chk(tag+'stop sharing sends delete',wait_for(pg,"S.liveDel.length===0&&!S.links[S.gid]",10))
@@ -131,12 +135,12 @@ with sync_playwright() as p:
         r2.goto('http://localhost:8787/?live=ZZZZZZ')
         chk(tag+'unknown code message',wait_for(r2,"document.body.innerText.includes('no longer available')"))
         # Games card has the four buttons
-        pg.evaluate("()=>{S.tab='g';render()}")
-        chk(tag+'games card buttons',pg.locator('.card .fin [data-act=fpic]').count()>=1 and pg.locator('.card .fin [data-act=flink]').count()>=1)
-        chk(tag+'games card shows sets',pg.locator('.card .tbl td.w').count()>0)
+        pg.evaluate("()=>{S.view='home';render()}")
+        chk(tag+'games list row',pg.locator('.glist .gr').count()>=1 and pg.locator('.glist .more').count()>=1)
+        chk(tag+'games list shows sets',any('3–1' in t for t in pg.locator('.glist .chip').all_inner_texts()))
         chk(tag+'no overflow games',pg.evaluate('document.documentElement.scrollWidth<=innerWidth'))
         if W==390: pg.screenshot(path='t4_games.png')
-        chk(tag+'version shown matches build',pg.evaluate("VERSION")=='2026-11-21.3')
+        chk(tag+'version shown matches build',pg.evaluate("VERSION")=='2026-11-21.4')
         chk(tag+'no page errors',not errs and not rerr)
         if errs or rerr: print(errs,rerr)
         rc.close();ctx.close()
