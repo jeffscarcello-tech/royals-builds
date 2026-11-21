@@ -14,10 +14,10 @@ const app=fs.readFileSync('../dist/app.json','utf8'), bt=fs.readFileSync('../dis
 let fetchMode='ok';
 globalThis.fetch=async(u)=>{u=String(u);
  if(fetchMode==='404')return new Response('',{status:404});
- if(u.includes('/test/build.txt'))return new Response(fetchMode==='mismatch'?'2026-99-99.9\n':bt);
- if(u.includes('/test/app.json'))return new Response(fetchMode==='wrong'?app.replace('"app": "royals"','"app": "darts"'):app);
+ if(u.includes('/build.txt'))return new Response(fetchMode==='mismatch'?'2026-99-99.9\n':bt);
+ if(u.includes('/app.json'))return new Response(fetchMode==='wrong'?app.replace('"app": "royals"','"app": "darts"'):app);
  return new Response('',{status:404})};
-const db=mkdb(),env={TEST_DB:db,DB:db,ADMIN_PASSWORD:'pw'};
+const db=mkdb(),ldb=mkdb(),env={TEST_DB:db,LIVE_DB:ldb,DB:db,ADMIN_PASSWORD:'pw'};
 const run=async()=>{await updater.scheduled({},env,{waitUntil:p=>p});await new Promise(r=>setTimeout(r,200));
  const g=await db.prepare("SELECT v FROM appmeta WHERE k='ghlast'").first();return JSON.parse(g.v).r};
 fetchMode='404';chk('404 reports nothing_to_install',await run()==='nothing_to_install');
@@ -41,3 +41,4 @@ x=await get('/admin/upload',{method:'POST',headers:{'x-admin-password':'pw'},bod
 x=await get('/api/health');chk('admin build live',(await x.json()).build==='9999-01-01.1');
 const fresh=(await import('./loader.mjs?fresh')).default;const empty=mkdb();x=await fresh.fetch(new Request('https://x/'),{DB:empty});chk('almost ready 503',x.status===503&&(await x.text()).includes('Almost ready'));
 console.log('FAILS:',F);
+{const g=await ldb.prepare("SELECT v FROM appmeta WHERE k='ghbuild'").first();console.log((g&&g.v===bt.trim()?'PASS':'FAIL')+' live site installed too');}

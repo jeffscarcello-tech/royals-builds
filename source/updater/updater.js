@@ -1,9 +1,9 @@
-const UPDATER = 'u1';
+const UPDATER = 'u2';
 const REPO = 'jeffscarcello-tech/royals-builds';
 const BRANCH = 'main';
 const PART = 50000;
 const APP_KIND = 'royals';
-const SITES = [ { name: 'test', dir: 'test', db: 'TEST_DB' } ];   // later: { name: 'live', dir: 'live', db: 'LIVE_DB' }
+const SITES = [ { name: 'test', dir: 'test', db: 'TEST_DB' }, { name: 'live', dir: 'live', db: 'LIVE_DB' } ];
 
 async function getText(path) {
   const r = await fetch(`https://raw.githubusercontent.com/${REPO}/${BRANCH}/${path}?t=${Date.now()}`, { headers: { 'Cache-Control': 'no-cache' }, cf: { cacheTtl: 0 } });

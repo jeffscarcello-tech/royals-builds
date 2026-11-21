@@ -7,10 +7,12 @@ Pattern: same as RosterPulse (GitHub repo + updater Worker + D1 + loader Worker)
 | Repo | jeffscarcello-tech/royals-builds |
 | Test site Worker | royalstest (D1 binding DB) |
 | Test database | royalstest (4c7d1a8b-c714-45fb-bfc4-def6cc90bffb) |
-| Updater Worker | royals-updater (cron */5, binding TEST_DB, repo folder test/) |
-| Live site (old, KV upload) | royalsstats, not changed yet (has no /api/live, so summary links say "not switched on" there) |
+| Updater Worker | royals-updater u2 (cron */5, TEST_DB -> test/, LIVE_DB -> live/) |
+| Live site Worker | royalsstats (loader, D1 binding DB) |
+| Live database | royalsstats (cefb0993-a66e-4a43-9ac0-36e99e900db8) |
 
-Releases: edit source/, bump source/version.json (and the app-version meta in source/build/app.src.html), run source/updater/build_app.py, copy dist/app.json and dist/build.txt into test/.
+Releases go to BOTH test/ and live/ at once (Jeff chose this on 2026-11-21).
+Releases: edit source/, bump source/version.json (and the app-version meta in source/build/app.src.html), run source/updater/build_app.py, copy dist/app.json and dist/build.txt into test/ and live/.
 Loader and updater Worker code (source/updater/loader.js, updater.js) are deployed through the Cloudflare connector, not through GitHub.
 /admin on royalstest: ADMIN_PASSWORD secret is set (Jeff has it; never stored in this repo).
 
